@@ -6,33 +6,36 @@ mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 mp_hands = mp.solutions.hands
 
+def get_distance(point1, point2):
+    #distância = raiz quadrada de ((x2 - x1)² + (y2 - y1)²)
+    #A distância euclidiana é uma medida usada para calcular a distância entre dois pontos em um espaço. 
+    return ((point1.x - point2.x)**2 + (point1.y - point2.y)**2)**0.5
+
 def get_hand_gestures(hand_landmarks):
     landmarks = hand_landmarks.landmark
 
+    dist1 = get_distance(landmarks[8], landmarks[12])#distância do dedo indicador do dedo do meio
+    dist2 = get_distance(landmarks[8], landmarks[4])#distância do dedo indicador do dedão
+
     # calculo da distância entre os dedos dependendo da distancia dos pontos definidos o programa reconhece como pedra tesoura ou papel
-    if ((landmarks[8].x - landmarks[12].x)**2 +
-             (landmarks[8].y - landmarks[12].y)**2)**0.5 < 0.04 and ((landmarks[8].x - landmarks[4].x)**2 +
-             (landmarks[8].y - landmarks[4].y)**2)**0.5 < 0.04:
+    if dist1 < 0.04 and dist2 < 0.04:
         return "pedra"
-    elif ((landmarks[8].x - landmarks[12].x)**2 +
-             (landmarks[8].y - landmarks[12].y)**2)**0.5 > 0.06 and ((landmarks[8].x - landmarks[4].x)**2 +
-             (landmarks[8].y - landmarks[4].y)**2)**0.5 > 0.06:
+    elif dist1 > 0.06 and dist2 > 0.06:
         return "tesoura"
     else:
         return "papel"
 
-# identifica a mao do primeiro e do segundo jogador
+
+# identifica a tupla dos landmarks que representa as maos de dois jogadores
 def get_players_hand(mhl):
     p1_hand, p2_hand = mhl
-# menor valor de X da primeira mao detectada
-    p1_min = min(list(
-        map(lambda l: l.x, p1_hand.landmark)))
-# menor valor de X da segunda mao detectada
-    p2_min = min(list(
-        map(lambda l: l.x, p2_hand.landmark)))
- # a primeira mão é a que inicia na menor posição de X na tela
-    p1_hand = p1_hand if p1_min < p2_min else p2_hand
-    p2_hand = p2_hand if p1_min < p2_min else p1_hand
+#essa função calcula qual jogador tem a mão mais próxima da esquerda, compara a coord X do ponto mais a esquerda da mao de cada jogador
+# por isso utilizamos map para aplica a função lambda l: l.x a cada ponto da lista de landmarks de cada mão obtemos uma lista
+#com todas as coord x's dos landmarks de cada mao depois a comparação é feita e atribuimos p1 e p2 a mão correspondente
+#lambda l: l.x é uma forma de criar uma função anonima de forma rápida l é o objeto que ela recebe e x é o atributo que ela retorna
+    (p1_hand, p2_hand) = (p1_hand, p2_hand) if min(list(
+        map(lambda l: l.x, p1_hand.landmark))) < min(list(
+        map(lambda l: l.x, p2_hand.landmark))) else (p2_hand, p1_hand)
 
     return p1_hand, p2_hand
 
